@@ -23,5 +23,5 @@ The Symphony Color es un juego interactivo basado en el tradicional "Simón Dice
 
 ## 🧑‍💻 Autor
 **Tu nombre completo o alias**  
-Página Web: [Lunaco Studios]((https://lunacostudios29.wordpress.com/))  
+Página Web: [Lunaco Studios](https://lunacostudios29.wordpress.com/)  
 Contacto: [lunacostudios@gmail.com](mailto:lunacostudios@gmail.com)
