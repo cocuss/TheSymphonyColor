@@ -22,7 +22,7 @@ The Symphony Color es un juego interactivo basado en el tradicional "Simón Dice
 - 👉 [Ver en Itch.io](https://cocuss.itch.io/the-symphony-color)
 
 ## 🧑‍💻 Autores
-**Desarrollado Por Lunaco Studios**  
+**Desarrollado Por Lunaco Studios**
 **Diseño y Desarrollo: Marco Alarcón**
 **Diseño y Animación: Alejandra Macedo**
 Página Web: [Lunaco Studios](https://lunacostudios29.wordpress.com/)  
