@@ -10,24 +10,24 @@ public class GameManager : MonoBehaviour
     private List<int> secuencia=new List<int>();
     private bool Turno = false;
     private int indiceJugador = 0;
-
+    public TextMeshProUGUI TextoContador;
     public TextMeshProUGUI TextoPuntaje;
     public GameObject PanelGameOver;
     private int puntaje = 0;
     public TextMeshProUGUI puntajeFinal;
-
+    public List<AudioClip> audioClips;
+    private AudioSource audioSource;
 
     // Start is called before the first frame update
     void Start()
     {
         iniciarJuego();
     }
-
-    // Update is called once per frame
-    void Update()
+    void Awake()
     {
-        
+        audioSource = GetComponent<AudioSource>();
     }
+
 
     public void iniciarJuego()
     {
@@ -35,7 +35,8 @@ public class GameManager : MonoBehaviour
         puntaje=0;
         TextoPuntaje.text = "" + puntaje;
         PanelGameOver.SetActive(false);
-        AgregarColor();
+        StartCoroutine(Contador());
+        
     }
 
     public void AgregarColor()
@@ -45,18 +46,60 @@ public class GameManager : MonoBehaviour
         StartCoroutine(MostrarSecuencia());
 
     }
+    IEnumerator Contador()
+    {
+        TextoContador.gameObject.SetActive(true);
+        for (int i = 3; i >= 1; i--)
+        {
+            TextoContador.text = "" + i;
+            yield return StartCoroutine(AnimarEscala());
+
+        }
+        TextoContador.text = "GO!";
+        yield return StartCoroutine(AnimarEscala());
+        TextoContador.gameObject.SetActive(false);
+        AgregarColor();
+    }
+
+    IEnumerator AnimarEscala()
+    {
+        float duracion = 1f;
+        float tiempo = 0f;
+        Vector3 escalaInicial = Vector3.one * 0.5f;
+        Vector3 escalaFinal = Vector3.one;
+
+        TextoContador.transform.localScale = escalaInicial;
+
+        while (tiempo < duracion)
+        {
+            TextoContador.transform.localScale = Vector3.Lerp(escalaInicial, escalaFinal, tiempo / duracion);
+            tiempo += Time.deltaTime;
+            yield return null;
+        }
+
+        TextoContador.transform.localScale = escalaFinal;
+    }
+
     IEnumerator MostrarSecuencia()
     {
         Turno = false;
+
         for (int i = 0; i < secuencia.Count; i++)
         {
             int indice = secuencia[i];
-            Color original = BotonesColores[indice].image.color;
+            Image imagenBoton = BotonesColores[indice].image;
+            Color original = imagenBoton.color;
 
-            BotonesColores[indice].image.color = Color.white;
+            // Intensificar el color simulando un foco encendido (ej: +40% intensidad)
+            Color iluminado = original * 1.8f;
+            iluminado.a = 1f; // Asegurar que la opacidad no se sobrepase
+
+            imagenBoton.color = iluminado;
+            Debug.Log("Reproduciendo sonido para el color: " + indice);
+            audioSource.PlayOneShot(audioClips[indice]);
             yield return new WaitForSeconds(0.3f);
 
-            BotonesColores[indice].image.color = original;
+            imagenBoton.color = original;
             yield return new WaitForSeconds(0.3f);
         }
 
