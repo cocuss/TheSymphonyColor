@@ -1,42 +1,57 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Advertisements;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviour, IUnityAdsInitializationListener, IUnityAdsShowListener
 {
     public List<Button> BotonesColores;
-    private List<int> secuencia=new List<int>();
+    private List<int> secuencia = new List<int>();
     private bool Turno = false;
     private int indiceJugador = 0;
     public TextMeshProUGUI TextoContador;
     public TextMeshProUGUI TextoPuntaje;
     public GameObject PanelGameOver;
+    public GameObject SeccionColores;
+    public GameObject SeccionScore;
     private int puntaje = 0;
     public TextMeshProUGUI puntajeFinal;
     public List<AudioClip> audioClips;
     private AudioSource audioSource;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        iniciarJuego();
-    }
+    private int partidasJugadas = 0;
+    private string androidGameId = "5903992";
+    private string iosGameId = "5903993";
+    private string adUnitId = "Interstitial_Android"; // O "Interstitial_iOS" si estás en iOS
+    private bool mostrarAdAntesDeReiniciar = false;
+
     void Awake()
     {
         audioSource = GetComponent<AudioSource>();
     }
 
+    void Start()
+    {
+#if UNITY_ANDROID
+        Advertisement.Initialize(androidGameId, true, this);
+#elif UNITY_IOS
+            Advertisement.Initialize(iosGameId, true, this);
+#endif
+
+        iniciarJuego();
+    }
 
     public void iniciarJuego()
     {
         secuencia.Clear();
-        puntaje=0;
+        SeccionColores.SetActive(true);
+        SeccionScore.SetActive(true);
+        puntaje = 0;
         TextoPuntaje.text = "" + puntaje;
         PanelGameOver.SetActive(false);
         StartCoroutine(Contador());
-        
     }
 
     public void AgregarColor()
@@ -44,8 +59,8 @@ public class GameManager : MonoBehaviour
         int ColorRandom = Random.Range(0, 4);
         secuencia.Add(ColorRandom);
         StartCoroutine(MostrarSecuencia());
-
     }
+
     IEnumerator Contador()
     {
         TextoContador.gameObject.SetActive(true);
@@ -53,7 +68,6 @@ public class GameManager : MonoBehaviour
         {
             TextoContador.text = "" + i;
             yield return StartCoroutine(AnimarEscala());
-
         }
         TextoContador.text = "GO!";
         yield return StartCoroutine(AnimarEscala());
@@ -90,12 +104,10 @@ public class GameManager : MonoBehaviour
             Image imagenBoton = BotonesColores[indice].image;
             Color original = imagenBoton.color;
 
-            // Intensificar el color simulando un foco encendido (ej: +40% intensidad)
             Color iluminado = original * 1.8f;
-            iluminado.a = 1f; // Asegurar que la opacidad no se sobrepase
+            iluminado.a = 1f;
 
             imagenBoton.color = iluminado;
-            Debug.Log("Reproduciendo sonido para el color: " + indice);
             audioSource.PlayOneShot(audioClips[indice]);
             yield return new WaitForSeconds(0.3f);
 
@@ -124,6 +136,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            SeccionColores.SetActive(false);
+            SeccionScore.SetActive(false);
             PanelGameOver.SetActive(true);
             puntajeFinal.text = "" + puntaje;
         }
@@ -131,11 +145,55 @@ public class GameManager : MonoBehaviour
 
     public void Reiniciar()
     {
-        iniciarJuego();
+        partidasJugadas++;
+
+        if (partidasJugadas % 2 == 0)
+        {
+            mostrarAdAntesDeReiniciar = true;
+            Advertisement.Show(adUnitId, this);
+        }
+        else
+        {
+            iniciarJuego();
+        }
     }
 
     public void Salir()
     {
         Application.Quit();
+    }
+
+    // Callbacks requeridos por Unity Ads
+    public void OnInitializationComplete()
+    {
+        Debug.Log("Unity Ads inicializado correctamente.");
+    }
+
+    public void OnInitializationFailed(UnityAdsInitializationError error, string message)
+    {
+        Debug.LogWarning($"Falló la inicialización de Ads: {error} - {message}");
+    }
+
+    public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
+    {
+        if (placementId == adUnitId && mostrarAdAntesDeReiniciar)
+        {
+            mostrarAdAntesDeReiniciar = false;
+            iniciarJuego();
+        }
+    }
+
+    public void OnUnityAdsShowStart(string placementId) { }
+
+    public void OnUnityAdsShowClick(string placementId) { }
+
+    public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
+    {
+        Debug.LogWarning($"Falló el anuncio: {error} - {message}");
+        if (mostrarAdAntesDeReiniciar)
+        {
+            mostrarAdAntesDeReiniciar = false;
+            iniciarJuego();
+        }
     }
 }
